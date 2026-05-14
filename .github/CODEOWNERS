@@ -1,0 +1,7 @@
+# Code owners: adjust to your org/team or specific users
+# Require review from the listed owners for all paths
+
+* @AmanddaLuz
+
+# Example for specific users:
+# * @alice @bob

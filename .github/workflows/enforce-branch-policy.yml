@@ -1,0 +1,78 @@
+name: Enforce branch policies
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-branch-origin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch develop branch
+        run: |
+          git fetch origin develop || true
+
+      - name: Enforce branch origin and main merge authorization
+        env:
+          BASE: ${{ github.event.pull_request.base.ref }}
+          ACTOR: ${{ github.actor }}
+          HEAD: ${{ github.head_ref }}
+          AUTHORIZED_MERGERS: ${{ secrets.AUTHORIZED_MERGERS }}
+        run: |
+          set -e
+          echo "PR base: $BASE, head: $HEAD, actor: $ACTOR"
+
+          # Helper to check if HEAD is based on develop
+          is_based_on_develop() {
+            # ensure we have develop locally
+            git fetch origin develop:refs/remotes/origin/develop || true
+            # find if origin/develop is an ancestor of HEAD
+            if git merge-base --is-ancestor origin/develop HEAD; then
+              return 0
+            else
+              return 1
+            fi
+          }
+
+          if [ "$BASE" = "develop" ]; then
+            echo "PR targets develop — verifying branch is based on develop"
+            if is_based_on_develop; then
+              echo "OK: branch is based on develop"
+              exit 0
+            else
+              echo "FAIL: feature branches must be created from develop"
+              exit 1
+            fi
+
+          elif [ "$BASE" = "main" ]; then
+            echo "PR targets main — only authorized users or branches based on develop are allowed"
+
+            # If authorized mergers list provided as comma-separated usernames, allow them
+            if [ -n "$AUTHORIZED_MERGERS" ]; then
+              IFS=',' read -ra ALLOWED <<< "$AUTHORIZED_MERGERS"
+              for u in "${ALLOWED[@]}"; do
+                if [ "$u" = "$ACTOR" ]; then
+                  echo "$ACTOR is in authorized mergers list — allowed to open PR to main"
+                  exit 0
+                fi
+              done
+            fi
+
+            # Otherwise require the branch to be based on develop
+            if is_based_on_develop; then
+              echo "OK: branch is based on develop — allowed to open PR to main"
+              exit 0
+            else
+              echo "FAIL: PR to main must originate from a branch based on 'develop' or be opened by an authorized merger"
+              exit 1
+            fi
+
+          else
+            echo "FAIL: PRs must target 'develop' (regular work) or 'main' (releases). Target was: $BASE"
+            exit 1
+          fi
