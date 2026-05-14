@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("io.gitlab.arturbosch.detekt").version("1.22.0")
 }
 
 android {
@@ -63,4 +64,31 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.gson)
     implementation(libs.shimmer)
+}
+
+// Detekt configuration: use the shared config/detekt/detekt.yml
+detekt {
+    config = files("$rootDir/config/detekt/detekt.yml")
+    buildUponDefaultConfig = true
+    parallel = true
+    ignoreFailures = false
+
+
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt> {
+    jvmTarget = "11"
+    reports {
+        xml {
+            required.set(true)
+            outputLocation.set(file("$buildDir/reports/detekt/detekt.xml"))
+        }
+        html {
+            required.set(true)
+            outputLocation.set(file("$buildDir/reports/detekt/detekt.html"))
+        }
+        txt {
+            required.set(false)
+        }
+    }
 }

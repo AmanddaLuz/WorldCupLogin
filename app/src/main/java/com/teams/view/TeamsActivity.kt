@@ -2,15 +2,11 @@ package com.teams.view
 
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.worldcuplogin.R
 import com.example.worldcuplogin.databinding.ActivityTeamsBinding
 import com.teams.adapter.TeamsAdapter
 import com.teams.repository.TeamRepositoryImpl
@@ -66,7 +62,8 @@ class TeamsActivity : AppCompatActivity() {
 
                         is TeamsUiState.Error -> {
                             adapter.showLoading(false)
-                            Toast.makeText(this@TeamsActivity, state.message, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@TeamsActivity, state.message, Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
                 }

@@ -1,0 +1,24 @@
+# detekt configuration: enables rules for unused imports and method complexity
+
+processors:
+  active: true
+
+config:
+  validation: true
+
+# Rule sets should be top-level (no 'rules:' wrapper)
+complexity:
+  CyclomaticComplexMethod:
+    active: true
+    # Maximum allowed complexity for a method (cyclomatic complexity)
+    threshold: 10
+
+style:
+  UnusedImports:
+    active: true
+
+naming:
+  # keep default naming rules
+  active: true
+
+# buildUponDefaultConfig will be used so this file only overrides specific rules

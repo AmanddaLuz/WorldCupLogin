@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.activity.result.launch
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,8 +14,6 @@ import com.login.usecase.LoginUseCase
 import com.login.viewmodel.LoginViewModel
 import com.login.viewmodel.state.LoginUIState
 import com.teams.view.TeamsActivity
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.observeOn
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
