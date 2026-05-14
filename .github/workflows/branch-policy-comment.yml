@@ -1,0 +1,90 @@
+name: Branch policy comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-and-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch develop branch
+        run: |
+          git fetch origin develop || true
+
+      - name: Run branch checks (capture result)
+        id: check
+        run: |
+          set +e
+          BASE=${{ github.event.pull_request.base.ref }}
+          ACTOR=${{ github.actor }}
+          HEAD=${{ github.head_ref }}
+
+          is_based_on_develop() {
+            git fetch origin develop:refs/remotes/origin/develop || true
+            if git merge-base --is-ancestor origin/develop "$HEAD"; then
+              return 0
+            else
+              return 1
+            fi
+          }
+
+          if [ "$BASE" = "develop" ]; then
+            if is_based_on_develop; then
+              echo "result=ok" >> "$GITHUB_OUTPUT"
+            else
+              echo "result=fail_feature_not_based_on_develop" >> "$GITHUB_OUTPUT"
+            fi
+
+          elif [ "$BASE" = "main" ]; then
+            AUTHORIZED_MERGERS="${{ secrets.AUTHORIZED_MERGERS }}"
+            if [ -n "$AUTHORIZED_MERGERS" ]; then
+              IFS=',' read -ra ALLOWED <<< "$AUTHORIZED_MERGERS"
+              for u in "${ALLOWED[@]}"; do
+                if [ "$u" = "$ACTOR" ]; then
+                  echo "result=ok" >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
+              done
+            fi
+
+            if is_based_on_develop; then
+              echo "result=ok" >> "$GITHUB_OUTPUT"
+            else
+              echo "result=fail_main_origin" >> "$GITHUB_OUTPUT"
+            fi
+
+          else
+            echo "result=fail_invalid_target" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on PR when policy violated
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = '${{ steps.check.outputs.result }}'
+            if (result !== 'ok') {
+              const repo = context.repo.repo
+              const owner = context.repo.owner
+              const issue_number = context.payload.pull_request.number
+              let body = ''
+              if (result === 'fail_feature_not_based_on_develop') {
+                body = 'Branch policy check failed: feature branches must be created from `develop`. Please rebase your branch onto `develop`.'
+              } else if (result === 'fail_main_origin') {
+                body = 'Branch policy check failed: PRs targeting `main` must originate from a branch based on `develop` or be opened by an authorized merger.'
+              } else if (result === 'fail_invalid_target') {
+                body = 'Branch policy check failed: PRs must target either `develop` (regular work) or `main` (releases).' 
+              } else {
+                body = 'Branch policy check failed.'
+              }
+
+              await github.issues.createComment({ owner, repo, issue_number, body })
+            } else {
+              // no-op
+              core.info('Branch policy OK')
+            }
