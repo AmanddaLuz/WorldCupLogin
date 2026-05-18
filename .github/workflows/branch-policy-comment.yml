@@ -83,7 +83,7 @@ jobs:
                 body = 'Branch policy check failed.'
               }
 
-              await github.issues.createComment({ owner, repo, issue_number, body })
+              await github.rest.issues.createComment({owner, repo, issue_number, body})
             } else {
               // no-op
               core.info('Branch policy OK')
