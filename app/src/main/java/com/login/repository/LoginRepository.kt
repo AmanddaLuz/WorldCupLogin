@@ -6,5 +6,5 @@ import com.login.repository.response.LoginResponse
 
 interface LoginRepository {
 
-    suspend fun login(context: Context, user: String, password: String): Result<LoginModel>
+    suspend fun login(email: String, password: String): Result<LoginModel>
 }

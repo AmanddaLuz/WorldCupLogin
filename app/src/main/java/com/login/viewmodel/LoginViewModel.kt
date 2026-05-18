@@ -17,12 +17,12 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
     private val _uiState = MutableStateFlow<LoginUIState>(LoginUIState.Idle)
     val uiState: StateFlow<LoginUIState> = _uiState.asStateFlow()
 
-    fun login(context: Context, user: String, password: String) {
+    fun login(user: String, password: String) {
         viewModelScope.launch {
             _uiState.value = LoginUIState.Loading
 
             val result = withContext(Dispatchers.IO) {
-                loginUseCase.login(context, user, password)
+                loginUseCase.login(user, password)
             }
 
             result.onSuccess { loginModel ->
