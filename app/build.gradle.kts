@@ -35,6 +35,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    packagingOptions {
+        resources {
+            excludes += setOf("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
+        }
+    }
     buildFeatures {
         compose = true
         viewBinding = true
@@ -64,6 +69,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.gson)
     implementation(libs.shimmer)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gson)
+    implementation(libs.logging.interceptor)
 }
 
 // Detekt configuration: use the shared config/detekt/detekt.yml
