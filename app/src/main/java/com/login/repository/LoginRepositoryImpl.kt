@@ -1,32 +1,79 @@
 package com.login.repository
 
-import android.content.Context
-import com.commons.JsonReader
-import com.google.gson.Gson
+import android.util.Log
 import com.login.model.LoginModel
-import com.login.repository.response.LoginResponse
-import com.login.repository.response.toDomain
-import kotlinx.coroutines.delay
+import com.login.model.User
+import com.login.network.LoginApi
 
-class LoginRepositoryImpl: LoginRepository {
+
+class LoginRepositoryImpl(
+    private val api: LoginApi
+) : LoginRepository {
+
     override suspend fun login(
-        context: Context,
-        user: String,
+        email: String,
         password: String
     ): Result<LoginModel> {
 
-        delay(1500)
-
         return try {
-            if (user.isEmpty() || password.isEmpty()){
-                return Result.failure(Exception("Usuário ou senha inválidos"))
-            } else {
-                val json = JsonReader.readJsonFromAssets(context, "mock/login_success.json")
-                val loginResponse = Gson().fromJson(json, LoginResponse::class.java)
-                Result.success(loginResponse.toDomain())
+
+            Log.d(
+                "LOGIN_REQUEST",
+                "email=$email password=$password"
+            )
+
+            val users = api.getUsers()
+
+            Log.d(
+                "LOGIN_RESPONSE",
+                users.toString()
+            )
+
+            val user = users.firstOrNull {
+
+                it.email.equals(
+                    email,
+                    ignoreCase = true
+                ) &&
+
+                        it.username.equals(
+                            password,
+                            ignoreCase = true
+                        )
             }
-        } catch (e: Exception) {
-            Result.failure(e)
+
+            Log.d(
+                "LOGIN_USER",
+                user.toString()
+            )
+
+            if (user != null) {
+
+                Result.success(
+                    LoginModel(
+                        user = User(
+                            name = user.name.orEmpty()
+                        ),
+                        success = true,
+                        token = user.id.toString()
+                    )
+                )
+
+            } else {
+
+                Result.failure(
+                    Throwable("Login inválido")
+                )
+            }
+
+        } catch (exception: Exception) {
+
+            Log.e(
+                "LOGIN_ERROR",
+                exception.message.orEmpty()
+            )
+
+            Result.failure(exception)
         }
     }
 }

@@ -38,6 +38,7 @@ class TeamsActivity : AppCompatActivity() {
 
         observerState()
         initBundle()
+        setupView()
         setupRecycler()
         adapter.showLoading(true)
         viewModel.getTeams(this)
@@ -80,5 +81,9 @@ class TeamsActivity : AppCompatActivity() {
         intent.getStringExtra("user_name")?.let { userName ->
             Toast.makeText(this, "Bem-vindo, $userName!", Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun setupView() {
+        binding.tvName.text = intent.getStringExtra("user_name")
     }
 }

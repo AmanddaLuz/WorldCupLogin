@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.worldcuplogin.databinding.ActivityLoginBinding
+import com.login.network.RetrofitFactory
 import com.login.repository.LoginRepositoryImpl
 import com.login.usecase.LoginUseCase
 import com.login.viewmodel.LoginViewModel
@@ -17,6 +20,7 @@ import com.teams.view.TeamsActivity
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
+
     private val binding: ActivityLoginBinding by lazy {
         ActivityLoginBinding.inflate(layoutInflater)
     }
@@ -24,7 +28,9 @@ class LoginActivity : AppCompatActivity() {
     private val viewModel: LoginViewModel by lazy {
         LoginViewModel(
             LoginUseCase(
-                LoginRepositoryImpl()
+                LoginRepositoryImpl(
+                    RetrofitFactory.create()
+                )
             )
         )
     }
@@ -32,19 +38,43 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
         setupListeners()
+        setupTextWatcher()
         loginObserver()
     }
 
     private fun setupListeners() {
         binding.buttonLogin.setOnClickListener {
-            binding.buttonLogin.isEnabled = false
             viewModel.login(
-                this,
-                binding.editTextUser.text.toString(),
-                binding.editPassword.text.toString()
+                binding.editTextUser.text
+                    .toString(),
+                binding.editPassword.text
+                    .toString()
             )
         }
+    }
+
+    private fun setupTextWatcher() {
+        binding.editTextUser.doAfterTextChanged {
+            updateButtonState()
+        }
+        binding.editPassword.doAfterTextChanged {
+            updateButtonState()
+        }
+    }
+
+    private fun refresh() {
+        binding.editTextUser.text?.clear()
+        binding.editPassword.text?.clear()
+    }
+
+    private fun updateButtonState() {
+        binding.buttonLogin.isEnabled =
+            binding.editTextUser.text
+                ?.isNotBlank() == true &&
+                    binding.editPassword.text
+                        ?.isNotBlank() == true
     }
 
     private fun loginObserver() {
@@ -53,21 +83,25 @@ class LoginActivity : AppCompatActivity() {
                 viewModel.uiState.collect { state ->
                     when (state) {
                         is LoginUIState.Idle -> {
-                            binding.progressBar.visibility = View.GONE
+                            hideButtonLoading()
                         }
                         is LoginUIState.Loading -> {
-                            binding.progressBar.visibility = View.VISIBLE
+                            showButtonLoading()
                         }
                         is LoginUIState.Success -> {
-                            binding.progressBar.visibility = View.GONE
+                            hideButtonLoading()
                             goToTeamsView(state.userNamer)
+                            refresh()
                         }
+
                         is LoginUIState.Error -> {
-                            binding.progressBar.visibility = View.GONE
-                            binding.buttonLogin.isEnabled = false
-                            binding.editTextUser.text?.clear()
-                            binding.editPassword.text?.clear()
-                            Toast.makeText(this@LoginActivity, "state.message", Toast.LENGTH_SHORT).show()
+                            hideButtonLoading()
+                            refresh()
+                            Toast.makeText(
+                                this@LoginActivity,
+                                state.message,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -75,9 +109,27 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun goToTeamsView(userName: String) {
-        val intent = Intent(this, TeamsActivity::class.java)
-        intent.putExtra("userName", userName)
+    private fun showButtonLoading() {
+        binding.buttonLogin.text = ""
+        binding.buttonLogin.isEnabled = false
+        binding.progressBar.isVisible = true
+    }
+
+    private fun hideButtonLoading() {
+        binding.buttonLogin.text = "Entrar"
+        binding.progressBar.isVisible = false
+        updateButtonState()
+    }
+
+    private fun goToTeamsView(
+        userName: String
+    ) {
+        val intent = Intent(this, TeamsActivity::class.java).apply {
+            putExtra(
+                "user_name",
+                userName
+            )
+        }
         startActivity(intent)
     }
 }
