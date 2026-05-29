@@ -16,6 +16,9 @@ activity = "1.13.0"
 constraintlayout = "2.2.1"
 shimmer = "0.5.0"
 retrofit = "3.0.0"
+mockk = "1.13.10"
+coroutinesTest = "1.7.3"
+turbine = "1.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +44,9 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 shimmer = { module = "com.facebook.shimmer:shimmer", version.ref = "shimmer" }
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

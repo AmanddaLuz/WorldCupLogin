@@ -15,10 +15,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WorldCupLogin">
         <activity
-            android:name="com.teams.view.TeamsActivity"
+            android:name="com.teams.presentation.view.TeamsActivity"
             android:exported="false" />
         <activity
-            android:name="com.login.view.LoginActivity"
+            android:name="com.login.presentation.view.LoginActivity"
             android:exported="true"
             android:label="app_name"
             android:theme="@style/Theme.WorldCupLogin">
